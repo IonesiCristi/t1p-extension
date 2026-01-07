@@ -1,0 +1,59 @@
+{
+    "manifest_version": 3,
+    "name": "T1P Companion",
+    "version": "1.0.0",
+    "description": "Integrates T1P Analytics with Skool and automates daily data collection.",
+    "permissions": [
+        "alarms",
+        "storage",
+        "cookies"
+    ],
+    "host_permissions": [
+        "https://www.linkedin.com/*",
+        "https://www.skool.com/*",
+        "http://localhost:54321/*",
+        "https://*.supabase.co/*"
+    ],
+    "background": {
+        "service_worker": "src/background/background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://www.skool.com/*"
+            ],
+            "js": [
+                "src/content/skool-injector.js"
+            ],
+            "css": [
+                "src/content/skool-styles.css"
+            ],
+            "run_at": "document_idle"
+        },
+        {
+            "matches": [
+                "http://localhost:5173/*",
+                "http://localhost:3000/*",
+                "https://app.t1p.com/*"
+            ],
+            "js": [
+                "src/content/auth-syncer.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ],
+    "action": {
+        "default_popup": "src/popup/popup.html",
+        "default_title": "T1P Companion",
+        "default_icon": {
+            "16": "public/icon.png",
+            "48": "public/icon.png",
+            "128": "public/icon.png"
+        }
+    },
+    "icons": {
+        "16": "public/icon.png",
+        "48": "public/icon.png",
+        "128": "public/icon.png"
+    }
+}

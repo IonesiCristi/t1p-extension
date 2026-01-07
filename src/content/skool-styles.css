@@ -1,0 +1,14 @@
+/* T1P Companion Styles for Skool */
+
+#t1p-nav-item:hover {
+    opacity: 0.8;
+}
+
+#t1p-overlay {
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -10px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
