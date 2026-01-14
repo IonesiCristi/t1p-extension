@@ -4,15 +4,15 @@
     "version": "1.0.0",
     "description": "Integrates T1P Analytics with Skool and automates daily data collection.",
     "permissions": [
-        "alarms",
         "storage",
-        "cookies"
+        "cookies",
+        "scripting"
     ],
     "host_permissions": [
-        "https://www.linkedin.com/*",
         "https://www.skool.com/*",
         "http://localhost:54321/*",
-        "https://*.supabase.co/*"
+        "https://*.supabase.co/*",
+        "https://*.linkedin.com/*"
     ],
     "background": {
         "service_worker": "src/background/background.js"

@@ -6,16 +6,21 @@ console.log("T1P Auth Syncer: Checking for session...");
 
 function syncSession() {
     // Supabase usually stores session in localStorage under 'sb-<project-ref>-auth-token'
-    // We need to find the correct key.
+    // defined in @supabase/supabase-js default storage options.
 
-    // Heuristic: specific key for T1P
-    // TODO: Replace 'YOUR_SUPABASE_PROJECT_REF' with actual ref from environment if possible, 
-    // or search for the key starting with 'sb-' and ending with '-auth-token'.
+    // TARGET: T1P-Backend (ehdlgpgmhsgcecnggzqr)
+    const PROJECT_REF = 'ehdlgpgmhsgcecnggzqr';
+    const authKey = `sb-${PROJECT_REF}-auth-token`;
 
-    const localStorageKeys = Object.keys(localStorage);
-    const authKey = localStorageKeys.find(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
+    // Debug: Check what keys exist
+    const allKeys = Object.keys(localStorage);
+    const potentialKeys = allKeys.filter(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
 
-    if (authKey) {
+    if (potentialKeys.length > 0) {
+        console.log("T1P Auth Syncer: Found Supabase tokens:", potentialKeys);
+    }
+
+    if (localStorage.getItem(authKey)) {
         const sessionStr = localStorage.getItem(authKey);
         if (sessionStr) {
             try {
@@ -23,18 +28,17 @@ function syncSession() {
                 const token = session.access_token;
 
                 if (token) {
-                    console.log("T1P Auth Syncer: Token found. Syncing to extension...");
+                    console.log(`T1P Auth Syncer: Valid token found for ${PROJECT_REF}. Syncing...`);
 
                     // Send to background script
                     chrome.runtime.sendMessage({
                         action: 'sync_auth',
                         token: token,
-                        // We can also pass public key/url if we want to config it dynamically
                     }, (response) => {
                         if (chrome.runtime.lastError) {
-                            // Extension might not be listening or installed ID mismatch if externall_connectable used
-                            // But since this is a content script defined in manifest, it shares the messaging channel
-                            console.log("Sync message sent.");
+                            // Extension might not be listening context
+                        } else {
+                            console.log("Sync message sent successfully.");
                         }
                     });
                 }
@@ -42,6 +46,8 @@ function syncSession() {
                 console.error("Error parsing session", e);
             }
         }
+    } else {
+        console.warn(`T1P Auth Syncer: No token found for project ${PROJECT_REF}. Please ensure you are logged into the correct Supabase project.`);
     }
 }
 

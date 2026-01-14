@@ -1,51 +1,429 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T1P Companion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
-        body {
-            width: 300px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            background-color: #0f0f0f;
-            color: #e0e0e0;
-            padding: 16px;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        h1 { font-size: 16px; margin-top: 0; color: #fff; }
-        .status {
-            padding: 12px;
-            background: #1e1e1e;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            border: 1px solid #333;
+
+        body {
+            width: 380px;
+            min-height: 500px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #020617;
+            color: #f8fafc;
+            overflow-x: hidden;
         }
-        .status-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
+
+        /* Background decorations */
+        .bg-decoration {
+            position: absolute;
+            width: 200px;
+            height: 200px;
             border-radius: 50%;
-            background-color: #4caf50;
-            margin-right: 8px;
+            filter: blur(80px);
+            opacity: 0.5;
+            pointer-events: none;
         }
-        button {
+
+        .bg-decoration.blue {
+            background: rgba(29, 78, 216, 0.15);
+            top: -50px;
+            left: -50px;
+        }
+
+        .bg-decoration.gold {
+            background: rgba(217, 119, 6, 0.15);
+            bottom: -50px;
+            right: -50px;
+        }
+
+        /* Login Container */
+        .login-container {
+            position: relative;
+            padding: 32px 24px;
+            z-index: 10;
+        }
+
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .logo-container img {
+            height: 60px;
+            width: auto;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        .form-container {
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 16px;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .form-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .form-header p {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 6px;
+            margin-left: 4px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #020617;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #1d4ed8;
+        }
+
+        .form-group input::placeholder {
+            color: #475569;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: #1d4ed8;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.2);
+        }
+
+        .btn-login:hover {
+            background: #1e40af;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(29, 78, 216, 0.3);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error-message {
+            background: rgba(190, 18, 60, 0.1);
+            border: 1px solid rgba(190, 18, 60, 0.3);
+            color: #fb7185;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .divider {
+            position: relative;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #334155;
+        }
+
+        .divider span {
+            position: relative;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 0 12px;
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        /* Dashboard (Authenticated State) */
+        .dashboard-container {
+            position: relative;
+            padding: 24px;
+            z-index: 10;
+            display: none;
+        }
+
+        .dashboard-container.show {
+            display: block;
+        }
+
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .dashboard-header img {
+            height: 48px;
+            width: auto;
+            margin-bottom: 16px;
+        }
+
+        .user-info {
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .user-info .email {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .user-info .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #4ade80;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: #4ade80;
+            border-radius: 50%;
+        }
+
+        .action-card {
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 12px;
+            background: #1d4ed8;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(29, 78, 216, 0.2);
+        }
+
+        .btn-action:hover {
+            background: #1e40af;
+            transform: translateY(-1px);
+        }
+
+        .btn-logout {
             width: 100%;
             padding: 10px;
-            background: #2196f3;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            font-size: 13px;
             font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 12px;
         }
-        button:hover { background: #1976d2; }
+
+        .btn-logout:hover {
+            border-color: #be123c;
+            color: #fb7185;
+        }
+
+        .message-area {
+            font-size: 12px;
+            text-align: center;
+            min-height: 20px;
+            margin-top: 12px;
+            color: #64748b;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 10px;
+            color: #475569;
+            margin-top: 20px;
+        }
     </style>
 </head>
+
 <body>
-    <h1>T1P Companion</h1>
-    <div class="status">
-        <div><span class="status-indicator"></span>Connected</div>
-        <div style="font-size: 12px; color: #888; margin-top: 4px;">Next scrape: in ~2 hours</div>
+    <!-- Background Decorations -->
+    <div class="bg-decoration blue"></div>
+    <div class="bg-decoration gold"></div>
+
+    <!-- Login View -->
+    <div class="login-container" id="loginView">
+        <div class="logo-container">
+            <img src="../../public/logo.svg" alt="T1P Logo">
+            <p class="subtitle">Growth Tracker</p>
+        </div>
+
+        <div class="form-container">
+            <div class="form-header">
+                <h2>Sign in to your account</h2>
+                <p>Access your LinkedIn analytics</p>
+            </div>
+
+            <div id="errorMessage" class="error-message"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Enter your email" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="••••••••" required
+                        autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-login" id="btnLogin">
+                    <span>Sign In</span>
+                    <span style="font-size: 18px;">→</span>
+                </button>
+            </form>
+
+            <div class="divider">
+                <span>Secure</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            © 2025 T1P Inc. All rights reserved.
+        </div>
     </div>
-    <button id="scrape-btn">Force Scrape Now</button>
+
+    <!-- Dashboard View (Authenticated) -->
+    <div class="dashboard-container" id="dashboardView">
+        <div class="dashboard-header">
+            <img src="../../public/logo.svg" alt="T1P Logo">
+        </div>
+
+        <div class="user-info">
+            <div class="email" id="userEmail">user@example.com</div>
+            <div class="status">
+                <span class="status-dot"></span>
+                <span>Connected</span>
+            </div>
+        </div>
+
+        <div class="action-card">
+            <button class="btn-action" id="btnScrape">
+                Collect LinkedIn Data
+            </button>
+            <div class="message-area" id="messageArea"></div>
+        </div>
+
+        <button class="btn-logout" id="btnLogout">Sign Out</button>
+
+        <div class="footer">
+            © 2025 T1P Inc. All rights reserved.
+        </div>
+    </div>
+
+    <!-- Load Supabase Library (Local Bundle) -->
+    <script src="../lib/supabase-bundle.js"></script>
+    <!-- Load Supabase Auth Library -->
+    <script src="../lib/supabase.js"></script>
+    <!-- Load Popup Logic -->
     <script src="popup.js"></script>
 </body>
+
 </html>
