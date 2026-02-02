@@ -34,6 +34,9 @@ function syncSession() {
                     chrome.runtime.sendMessage({
                         action: 'sync_auth',
                         token: token,
+                        refreshToken: session.refresh_token,
+                        email: session.user?.email,
+                        expiry: session.expires_at
                     }, (response) => {
                         if (chrome.runtime.lastError) {
                             // Extension might not be listening context

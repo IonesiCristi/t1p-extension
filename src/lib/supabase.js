@@ -129,31 +129,87 @@ async function logout() {
 
 async function getSession() {
     try {
-        const result = await chrome.storage.local.get(['userToken', 'userEmail', 'sessionExpiry']);
+        const result = await chrome.storage.local.get(['userToken', 'userEmail', 'sessionExpiry', 'refreshToken']);
 
-        // Must have both token and email
-        if (!result.userToken || !result.userEmail) {
-            console.log('[T1P Auth] No valid session found');
+        // Check if we have a valid session structure (either valid token+email OR a refresh token)
+        if (!result.refreshToken && (!result.userToken || !result.userEmail)) {
+            console.log('[T1P Auth] No session found');
             return null;
         }
 
         // Check if session is expired
+        let isExpired = false;
         if (result.sessionExpiry) {
             const expiryDate = new Date(result.sessionExpiry * 1000);
             const now = new Date();
+            // Add 60s buffer
+            if (expiryDate < new Date(now.getTime() + 60000)) {
+                isExpired = true;
+            }
+        }
 
-            if (expiryDate < now) {
-                console.log('[T1P Auth] Session expired, clearing tokens');
+        // If expired and we have a refresh token, try to refresh
+        if (isExpired && result.refreshToken) {
+            console.log('[T1P Auth] Session expired, attempting refresh...');
+
+            try {
+                // Ensure Supabase is loaded
+                await waitForSupabase();
+                const client = initSupabase();
+
+                if (!client) {
+                    console.error('[T1P Auth] Cannot refresh: Supabase client init failed');
+                    return null;
+                }
+
+                const { data, error } = await client.auth.setSession({
+                    refresh_token: result.refreshToken,
+                    access_token: result.userToken // Optional but good for context
+                });
+
+                if (error || !data.session) {
+                    console.error('[T1P Auth] Refresh failed:', error);
+                    await clearSession();
+                    return null;
+                }
+
+                console.log('[T1P Auth] Session refreshed successfully');
+
+                // Update storage with new session
+                await chrome.storage.local.set({
+                    userToken: data.session.access_token,
+                    refreshToken: data.session.refresh_token,
+                    userEmail: data.user.email,
+                    sessionExpiry: data.session.expires_at
+                });
+
+                return {
+                    token: data.session.access_token,
+                    email: data.user.email,
+                    expiry: data.session.expires_at
+                };
+
+            } catch (refreshError) {
+                console.error('[T1P Auth] Refresh exception:', refreshError);
                 await clearSession();
                 return null;
             }
         }
 
+        // If expired and NO refresh token, clear
+        else if (isExpired) {
+            console.log('[T1P Auth] Session expired and no refresh token available');
+            await clearSession();
+            return null;
+        }
+
+        // Valid session
         return {
             token: result.userToken,
             email: result.userEmail,
             expiry: result.sessionExpiry
         };
+
     } catch (error) {
         console.error('[T1P Auth] Error getting session:', error);
         return null;

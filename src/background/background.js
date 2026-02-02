@@ -14,9 +14,15 @@ const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/process-linkedin-metrics
 // Message Handler (Auth Sync)
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'sync_auth') {
-        console.log("[T1P] Received Auth Token from Web App");
-        chrome.storage.local.set({ userToken: message.token }, () => {
-            console.log("[T1P] Token saved.");
+        console.log("[T1P] Received Auth Session from Web App");
+
+        const updates = { userToken: message.token };
+        if (message.refreshToken) updates.refreshToken = message.refreshToken;
+        if (message.email) updates.userEmail = message.email;
+        if (message.expiry) updates.sessionExpiry = message.expiry;
+
+        chrome.storage.local.set(updates, () => {
+            console.log("[T1P] Session saved.");
             sendResponse({ status: 'ok' });
         });
         return true; // Keep channel open
