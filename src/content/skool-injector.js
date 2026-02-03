@@ -91,7 +91,7 @@ function activateT1PView(link, innerDiv) {
         t1pContainer.style.marginTop = '144px';
         t1pContainer.innerHTML = `
             <iframe 
-                src="http://localhost:3000/dashboard" 
+                src="https://t1p.dev/dashboard" 
                 style="width: 100%; height: 100vh; border: none;"
                 title="T1P Dashboard"
             ></iframe>

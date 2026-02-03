@@ -34,7 +34,7 @@
             "matches": [
                 "http://localhost:5173/*",
                 "http://localhost:3000/*",
-                "https://app.t1p.com/*"
+                "https://t1p.dev/*"
             ],
             "js": [
                 "src/content/auth-syncer.js"

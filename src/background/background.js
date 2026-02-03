@@ -1,15 +1,23 @@
 // T1P Companion - Background Service Worker
 
+// Import centralized config (loaded via manifest.json background.service_worker)
+// Config is made available globally via window.T1P_CONFIG in content scripts
+// For service worker, we define locally (service workers can't import scripts easily)
+const T1P_CONFIG = {
+    PROJECT_REF: 'ehdlgpgmhsgcecnggzqr',
+    get SUPABASE_URL() { return `https://${this.PROJECT_REF}.supabase.co`; },
+    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZGxncGdtaHNnY2VjbmdnenFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzM2ODYsImV4cCI6MjA4Mjk0OTY4Nn0.-kHi_NRb3jQoY7ACSTC_Ymu96RKmpODQYFfJ4TkxO8I',
+    DEBUG_MODE: false,
+    getEdgeFunctionUrl(name) { return `${this.SUPABASE_URL}/functions/v1/${name}`; }
+};
+
+// Derived constants from config
+const EDGE_FUNCTION_URL = T1P_CONFIG.getEdgeFunctionUrl('process-linkedin-metrics');
+
 // Setup on install
 chrome.runtime.onInstalled.addListener(() => {
     console.log("[T1P] T1P Companion Installed.");
 });
-
-// Configure Supabase
-const PROJECT_REF = 'ehdlgpgmhsgcecnggzqr'; // T1P-Backend
-const SUPABASE_URL = `https://${PROJECT_REF}.supabase.co`;
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZGxncGdtaHNnY2VjbmdnenFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzM2ODYsImV4cCI6MjA4Mjk0OTY4Nn0.-kHi_NRb3jQoY7ACSTC_Ymu96RKmpODQYFfJ4TkxO8I'; // Added for apikey header
-const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/process-linkedin-metrics`;
 
 // Message Handler (Auth Sync)
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -89,9 +97,9 @@ async function collectLinkedInData() {
  * @param {string} token Supabase Authentication Token
  */
 async function sendDataToSupabase(html, type, token) {
-    console.log(`[T1P] [SUPABASE] Sending ${type} data (${html.length} chars)...`);
-    console.log(`[T1P] [SUPABASE] Token (first 50 chars): ${token?.substring(0, 50)}...`);
-    console.log(`[T1P] [SUPABASE] Token length: ${token?.length}`);
+    if (T1P_CONFIG.DEBUG_MODE) {
+        console.log(`[T1P] [SUPABASE] Sending ${type} data (${html.length} chars)...`);
+    }
 
     try {
         const response = await fetch(EDGE_FUNCTION_URL, {
@@ -99,7 +107,7 @@ async function sendDataToSupabase(html, type, token) {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
-                'apikey': SUPABASE_ANON_KEY // Added as requested by Supabase Gateways
+                'apikey': T1P_CONFIG.SUPABASE_ANON_KEY
             },
             body: JSON.stringify({
                 html: html,
