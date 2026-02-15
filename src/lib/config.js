@@ -16,7 +16,7 @@ const T1P_CONFIG = {
 
     // Supabase anonymous key (safe for client-side use)
     // This key has limited permissions enforced by RLS
-    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZGxncGdtaHNnY2Vjbmdnenlyiiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4NDE5NDUsImV4cCI6MjA1MjQxNzk0NX0.rHvd-wPq_jnbZAHMmxhLBfLFmLu9u4DsGW5pK_OuN-g',
+    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoZGxncGdtaHNnY2VjbmdnenFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczNzM2ODYsImV4cCI6MjA4Mjk0OTY4Nn0.-kHi_NRb3jQoY7ACSTC_Ymu96RKmpODQYFfJ4TkxO8I',
 
     // Edge Function paths
     EDGE_FUNCTIONS: {

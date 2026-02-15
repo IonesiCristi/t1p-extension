@@ -56,10 +56,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 // 3. Send to Supabase Edge Function
                 const ssiPromise = sendDataToSupabase(data.ssi, 'ssi', token);
                 const searchPromise = sendDataToSupabase(data.search_appearances, 'search_appearances', token);
+                const viewsPromise = sendDataToSupabase(data.profile_views, 'profile_views', token);
 
-                const [ssiResult, searchResult] = await Promise.all([ssiPromise, searchPromise]);
+                const [ssiResult, searchResult, viewsResult] = await Promise.all([ssiPromise, searchPromise, viewsPromise]);
 
-                console.log("[T1P] [COLLECT] Supabase Sync Results:", { ssiResult, searchResult });
+                console.log("[T1P] [COLLECT] Supabase Sync Results:", { ssiResult, searchResult, viewsResult });
                 sendResponse({ status: 'success', data: { message: "Data captured and synced to Supabase", timestamp: data.timestamp } });
             } catch (err) {
                 console.error("[T1P] [COLLECT] Sequence or Sync FAILED:", err);
@@ -72,22 +73,96 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function collectLinkedInData() {
-    console.log("[T1P] [COLLECT] Step 1/2: Collecting SSI...");
+    console.log("[T1P] [COLLECT] Step 1/3: Collecting SSI...");
     const ssiHTML = await collectSSI();
 
     // Human-like cooldown between pages (3-6 seconds)
-    const cooldown = Math.floor(Math.random() * 3000) + 3000;
-    console.log(`[T1P] [COLLECT] Cooling down for ${cooldown}ms...`);
-    await new Promise(r => setTimeout(r, cooldown));
+    const cooldown1 = Math.floor(Math.random() * 3000) + 3000;
+    console.log(`[T1P] [COLLECT] Cooling down for ${cooldown1}ms...`);
+    await new Promise(r => setTimeout(r, cooldown1));
 
-    console.log("[T1P] [COLLECT] Step 2/2: Collecting Search Appearances...");
+    console.log("[T1P] [COLLECT] Step 2/3: Collecting Search Appearances...");
     const searchHTML = await collectSearchAppearances();
+
+    // Human-like cooldown between pages (3-6 seconds)
+    const cooldown2 = Math.floor(Math.random() * 3000) + 3000;
+    console.log(`[T1P] [COLLECT] Cooling down for ${cooldown2}ms...`);
+    await new Promise(r => setTimeout(r, cooldown2));
+
+    console.log("[T1P] [COLLECT] Step 3/3: Collecting Profile Views...");
+    const profileViewsHTML = await collectProfileViews();
 
     return {
         ssi: ssiHTML,
         search_appearances: searchHTML,
+        profile_views: profileViewsHTML,
         timestamp: new Date().toISOString()
     };
+}
+
+async function collectProfileViews() {
+    const url = 'https://www.linkedin.com/analytics/profile-views/?timeRange=past_90_days';
+    console.log(`[T1P] [VIEWS] Opening background tab: ${url}`);
+
+    let tabId = null;
+    try {
+        const tab = await chrome.tabs.create({ url, active: false });
+        tabId = tab.id;
+        console.log(`[T1P] [VIEWS] Tab created (ID: ${tabId}). Waiting for load...`);
+
+        await new Promise((resolve, reject) => {
+            const listener = (tid, changeInfo) => {
+                if (tid === tabId && changeInfo.status === 'complete') {
+                    chrome.tabs.onUpdated.removeListener(listener);
+                    resolve();
+                }
+            };
+            chrome.tabs.onUpdated.addListener(listener);
+            setTimeout(() => {
+                chrome.tabs.onUpdated.removeListener(listener);
+                reject(new Error("Timeout waiting for Profile Views page load"));
+            }, 15000);
+        });
+        console.log("[T1P] [VIEWS] Page loaded. Waiting for human-like interaction delay...");
+        await randomDelay(2000, 4000); // Wait 2-4s before interacting
+
+        console.log("[T1P] [VIEWS] Waiting for Highcharts container...");
+        // Inject script to wait for chart and get HTML
+        const results = await chrome.scripting.executeScript({
+            target: { tabId },
+            func: async () => {
+                const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+                // Wait for .highcharts-container
+                let attempts = 0;
+                while (!document.querySelector('.highcharts-container') && attempts < 20) {
+                    await sleep(500);
+                    attempts++;
+                }
+
+                if (document.querySelector('.highcharts-container')) {
+                    console.log("[T1P] [VIEWS] Highcharts container found.");
+                } else {
+                    console.warn("[T1P] [VIEWS] Highcharts container NOT found after timeout.");
+                }
+
+                return document.documentElement.outerHTML;
+            }
+        });
+
+        const html = results[0].result;
+        console.log(`[T1P] [VIEWS] HTML captured (${html.length} chars).`);
+        return html;
+
+    } catch (err) {
+        console.error("[T1P] [VIEWS] Error:", err);
+        throw err;
+    } finally {
+        if (tabId) {
+            console.log(`[T1P] [VIEWS] Cleaning up tab ${tabId}...`);
+            await chrome.tabs.remove(tabId).catch(() => { });
+        }
+    }
 }
 
 /**
