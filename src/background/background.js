@@ -101,7 +101,7 @@ async function collectLinkedInData() {
 }
 
 async function collectProfileViews() {
-    const url = 'https://www.linkedin.com/analytics/profile-views/?timeRange=past_90_days';
+    const url = 'https://www.linkedin.com/analytics/profile-views/';
     console.log(`[T1P] [VIEWS] Opening background tab: ${url}`);
 
     let tabId = null;
