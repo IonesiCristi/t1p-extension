@@ -2,6 +2,18 @@
 
 let currentSession = null;
 
+// Returns the current "collection day" as YYYY-MM-DD.
+// The day starts at 7 AM local time — before 7 AM counts as the previous day.
+function getCollectionDay() {
+    const now = new Date();
+    if (now.getHours() < 7) {
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        return yesterday.toISOString().split('T')[0];
+    }
+    return now.toISOString().split('T')[0];
+}
+
 // Initialize popup on load
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('[T1P Popup] Initializing...');
@@ -57,10 +69,22 @@ function showLogin() {
     document.getElementById('dashboardView').classList.remove('show');
 }
 
-function showDashboard(session) {
+async function showDashboard(session) {
     document.getElementById('loginView').style.display = 'none';
     document.getElementById('dashboardView').classList.add('show');
     document.getElementById('userEmail').textContent = session.email;
+
+    // Check if already collected today (7 AM – 7 AM window)
+    chrome.storage.local.get(['lastCollectDay'], (result) => {
+        if (result.lastCollectDay === getCollectionDay()) {
+            const btn = document.getElementById('btnScrape');
+            const msg = document.getElementById('messageArea');
+            btn.disabled = true;
+            btn.textContent = 'Already Collected Today';
+            msg.textContent = 'You can collect again after 7:00 AM tomorrow.';
+            msg.style.color = '#64748b';
+        }
+    });
 }
 
 function setupEventListeners() {
@@ -181,6 +205,7 @@ async function handleLogout() {
 async function handleCollect() {
     const btnScrape = document.getElementById('btnScrape');
     const messageArea = document.getElementById('messageArea');
+    let succeeded = false;
 
     try {
         btnScrape.disabled = true;
@@ -199,6 +224,13 @@ async function handleCollect() {
             console.log('[T1P Popup] Collection successful:', response);
             messageArea.textContent = '✓ Data collected successfully!';
             messageArea.style.color = '#4ade80';
+
+            // Mark today as collected so the button stays disabled
+            chrome.storage.local.set({ lastCollectDay: getCollectionDay() });
+            succeeded = true;
+
+            // Keep button disabled and show cooldown text
+            btnScrape.textContent = 'Already Collected Today';
         } else {
             throw new Error(response.message || 'Scraping failed');
         }
@@ -208,12 +240,20 @@ async function handleCollect() {
         messageArea.textContent = '✗ ' + (error.message || 'Failed to collect data');
         messageArea.style.color = '#fb7185';
     } finally {
-        btnScrape.disabled = false;
-        btnScrape.textContent = 'Collect LinkedIn Data';
+        if (!succeeded) {
+            // Only re-enable button if the collection failed
+            btnScrape.disabled = false;
+            btnScrape.textContent = 'Collect LinkedIn Data';
+        }
 
         // Clear message after 5 seconds
         setTimeout(() => {
-            messageArea.textContent = '';
+            if (succeeded) {
+                messageArea.textContent = 'You can collect again after 7:00 AM tomorrow.';
+                messageArea.style.color = '#64748b';
+            } else {
+                messageArea.textContent = '';
+            }
         }, 5000);
     }
 }

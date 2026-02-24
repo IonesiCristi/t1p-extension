@@ -11,6 +11,18 @@ const T1P_CONFIG = {
     getEdgeFunctionUrl(name) { return `${this.SUPABASE_URL}/functions/v1/${name}`; }
 };
 
+// Returns the current "collection day" as YYYY-MM-DD.
+// The day starts at 7 AM local time — before 7 AM counts as the previous day.
+function getCollectionDay() {
+    const now = new Date();
+    if (now.getHours() < 7) {
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        return yesterday.toISOString().split('T')[0];
+    }
+    return now.toISOString().split('T')[0];
+}
+
 // Derived constants from config
 const EDGE_FUNCTION_URL = T1P_CONFIG.getEdgeFunctionUrl('process-linkedin-metrics');
 
@@ -61,6 +73,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 const [ssiResult, searchResult, viewsResult] = await Promise.all([ssiPromise, searchPromise, viewsPromise]);
 
                 console.log("[T1P] [COLLECT] Supabase Sync Results:", { ssiResult, searchResult, viewsResult });
+
+                // Mark today as collected so the button stays disabled even if popup was closed
+                const collectionDay = getCollectionDay();
+                chrome.storage.local.set({ lastCollectDay: collectionDay });
+                console.log(`[T1P] [COLLECT] Marked collection day: ${collectionDay}`);
+
                 sendResponse({ status: 'success', data: { message: "Data captured and synced to Supabase", timestamp: data.timestamp } });
             } catch (err) {
                 console.error("[T1P] [COLLECT] Sequence or Sync FAILED:", err);
