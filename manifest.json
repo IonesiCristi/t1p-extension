@@ -5,7 +5,6 @@
     "description": "Integrates T1P Analytics with Skool and automates daily data collection.",
     "permissions": [
         "storage",
-        "cookies",
         "scripting"
     ],
     "host_permissions": [
@@ -23,7 +22,8 @@
                 "https://www.skool.com/*"
             ],
             "js": [
-                "src/content/skool-injector.js"
+                "src/content/skool-injector.js",
+                "src/content/community-badges.js"
             ],
             "css": [
                 "src/content/skool-styles.css"

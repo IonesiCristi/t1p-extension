@@ -76,6 +76,10 @@ async function showDashboard(session) {
 
     // Check if already collected today (7 AM – 7 AM window)
     chrome.storage.local.get(['lastCollectDay'], (result) => {
+        if (chrome.runtime.lastError) {
+            console.warn('[T1P Popup] Storage read error:', chrome.runtime.lastError);
+            return;
+        }
         if (result.lastCollectDay === getCollectionDay()) {
             const btn = document.getElementById('btnScrape');
             const msg = document.getElementById('messageArea');
@@ -225,8 +229,7 @@ async function handleCollect() {
             messageArea.textContent = '✓ Data collected successfully!';
             messageArea.style.color = '#4ade80';
 
-            // Mark today as collected so the button stays disabled
-            chrome.storage.local.set({ lastCollectDay: getCollectionDay() });
+            // Cooldown flag is set by background.js — no need to set it here
             succeeded = true;
 
             // Keep button disabled and show cooldown text
