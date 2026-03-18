@@ -23,7 +23,8 @@
             ],
             "js": [
                 "src/content/skool-injector.js",
-                "src/content/community-badges.js"
+                "src/content/community-badges.js",
+                "src/content/notification-hider.js"
             ],
             "css": [
                 "src/content/skool-styles.css"

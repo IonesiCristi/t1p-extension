@@ -318,38 +318,41 @@ async function collectSearchAppearances() {
 
                 console.log("[T1P] [SEARCH] Checking for dropdown button...");
                 // 1. Click "Where you appeared" / "Dropdown" to open menu
-                // Selector confirmed via live page investigation
-                const dropdownBtn = document.querySelector('button.member-analytics-addon-chart-module__dropdown-button');
+                // Selector confirmed via live page investigation (works for some LinkedIn layouts)
+                try {
+                    const dropdownBtn = document.querySelector('button.member-analytics-addon-chart-module__dropdown-button');
 
-                if (dropdownBtn) {
-                    console.log("[T1P] [SEARCH] Dropdown button found. Clicking...");
-                    dropdownBtn.click();
-                    await randomSleep(1500, 2500); // Wait for menu to render
+                    if (dropdownBtn) {
+                        console.log("[T1P] [SEARCH] Dropdown button found. Clicking...");
+                        dropdownBtn.click();
+                        await randomSleep(1500, 2500); // Wait for menu to render
 
-                    // 2. Find "Job titles you were found for"
-                    // Selector confirmed: li[aria-label="Job titles you were found for"]
-                    // Also keeping a fallback to text content just in case aria-label changes
-                    let targetItem = document.querySelector('li[aria-label="Job titles you were found for"]');
+                        // 2. Find "Job titles you were found for"
+                        let targetItem = document.querySelector('li[aria-label="Job titles you were found for"]');
 
-                    if (!targetItem) {
-                        console.log("[T1P] [SEARCH] Aria-label selector failed. Trying text fallback...");
-                        const items = Array.from(document.querySelectorAll('li[role="menuitem"], .artdeco-dropdown__item'));
-                        targetItem = items.find(el => el.innerText && el.innerText.includes('Job titles you were found for'));
-                    }
+                        if (!targetItem) {
+                            console.log("[T1P] [SEARCH] Aria-label selector failed. Trying text fallback...");
+                            const items = Array.from(document.querySelectorAll('li[role="menuitem"], .artdeco-dropdown__item'));
+                            targetItem = items.find(el => el.innerText && el.innerText.includes('Job titles you were found for'));
+                        }
 
-                    if (targetItem) {
-                        console.log("[T1P] [SEARCH] Target item found. Clicking...");
-                        targetItem.click();
-                        // Wait longer for the new chart data to fetch and render
-                        await randomSleep(3000, 5000);
+                        if (targetItem) {
+                            console.log("[T1P] [SEARCH] Target item found. Clicking...");
+                            targetItem.click();
+                            await randomSleep(3000, 5000);
+                        } else {
+                            console.warn("[T1P] [SEARCH] 'Job titles you were found for' option NOT found in dropdown.");
+                        }
                     } else {
-                        console.warn("[T1P] [SEARCH] 'Job titles you were found for' option NOT found in dropdown.");
+                        console.warn("[T1P] [SEARCH] Dropdown button NOT found. LinkedIn may have updated their layout. Continuing with available HTML...");
+                        // Wait for any async content to render on the new layout
+                        await randomSleep(2000, 3000);
                     }
-                } else {
-                    console.warn("[T1P] [SEARCH] Dropdown button NOT found.");
+                } catch (err) {
+                    console.warn("[T1P] [SEARCH] Dropdown interaction failed (non-fatal):", err?.message || err);
                 }
 
-                // 3. Return Full HTML
+                // 3. Return Full HTML regardless of dropdown success
                 return document.documentElement.outerHTML;
             }
         });

@@ -74,6 +74,20 @@ async function showDashboard(session) {
     document.getElementById('dashboardView').classList.add('show');
     document.getElementById('userEmail').textContent = session.email;
 
+    // Show owner-only section and load toggle state
+    const BADGE_OWNER_EMAIL = 'ionesicristi@gmail.com';
+    if (session.email === BADGE_OWNER_EMAIL) {
+        const ownerSection = document.getElementById('ownerSection');
+        if (ownerSection) ownerSection.classList.add('show');
+
+        chrome.storage.local.get(['hideNotificationBadges'], (result) => {
+            const toggle = document.getElementById('toggleBadgeHider');
+            if (toggle) {
+                toggle.checked = result.hideNotificationBadges !== false;
+            }
+        });
+    }
+
     // Check if already collected today (7 AM – 7 AM window)
     chrome.storage.local.get(['lastCollectDay'], (result) => {
         if (chrome.runtime.lastError) {
@@ -103,6 +117,14 @@ function setupEventListeners() {
     // Collect button
     const btnScrape = document.getElementById('btnScrape');
     btnScrape.addEventListener('click', handleCollect);
+
+    // Badge hider toggle (owner-only)
+    const toggleBadgeHider = document.getElementById('toggleBadgeHider');
+    if (toggleBadgeHider) {
+        toggleBadgeHider.addEventListener('change', () => {
+            chrome.storage.local.set({ hideNotificationBadges: toggleBadgeHider.checked });
+        });
+    }
 }
 
 async function handleLogin(e) {
