@@ -349,6 +349,65 @@
             color: #475569;
             margin-top: 20px;
         }
+
+        /* Owner-only section */
+        .owner-section {
+            display: none;
+        }
+        .owner-section.show {
+            display: block;
+        }
+
+        /* Toggle row */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+        .toggle-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #cbd5e1;
+        }
+        .toggle-label small {
+            display: block;
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 400;
+            margin-top: 2px;
+        }
+
+        /* iOS-style switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+            flex-shrink: 0;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: #334155;
+            border-radius: 22px;
+            transition: background 0.25s;
+        }
+        .slider::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            left: 3px;
+            top: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.25s;
+        }
+        .switch input:checked + .slider { background: #1d4ed8; }
+        .switch input:checked + .slider::before { transform: translateX(18px); }
     </style>
 </head>
 
@@ -417,6 +476,20 @@
                 Collect LinkedIn Data
             </button>
             <div class="message-area" id="messageArea"></div>
+        </div>
+
+        <!-- Owner-only: Notification badge hider toggle -->
+        <div class="action-card owner-section" id="ownerSection">
+            <div class="toggle-row">
+                <div class="toggle-label">
+                    Hide notification badges
+                    <small>Red circles on Skool messages &amp; bell</small>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" id="toggleBadgeHider" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
 
         <button class="btn-logout" id="btnLogout">Sign Out</button>
