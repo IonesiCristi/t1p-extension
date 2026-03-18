@@ -236,7 +236,7 @@ async function handleCollect() {
     try {
         btnScrape.disabled = true;
         btnScrape.textContent = 'Collecting data...';
-        messageArea.textContent = 'Starting LinkedIn data collection...';
+        messageArea.innerHTML = 'Collecting LinkedIn data:<br><div style="text-align:left;padding-left:32%;margin-top:4px">1) SSI score<br>2) Search appearances<br>3) Profile views</div>';
         messageArea.style.color = '#94a3b8';
 
         console.log('[T1P Popup] Sending collection request to background script...');
